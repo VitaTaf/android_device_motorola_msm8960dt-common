@@ -52,7 +52,8 @@ public class MotoDozeService extends Service {
     private static final String GESTURE_HAND_WAVE_KEY = "gesture_hand_wave";
 
     private static final int SENSOR_WAKELOCK_DURATION = 200;
-    private static final int MIN_PULSE_INTERVAL_MS = 10000;
+    private static final int MIN_PULSE_INTERVAL_MS = 250;
+    private static final int DELAY_PULSE_INTERVAL_MS = 4000;
     private static final int HANDWAVE_DELTA_NS = 1000 * 1000 * 1000;
 
     private Context mContext;
@@ -65,6 +66,7 @@ public class MotoDozeService extends Service {
     private CameraManager mCameraManager;
     private String mTorchCameraId;
     private long mLastPulseTimestamp = 0;
+    private long mDisplayOffTimestamp = 0;
     private boolean mTorchEnabled = false;
     private boolean mCameraGestureEnabled = false;
     private boolean mFlashlightGestureEnabled = false;
@@ -218,7 +220,7 @@ public class MotoDozeService extends Service {
             }
         } else {
             if (DEBUG) Log.d(TAG, "Unstowed: " + event.timestamp + " last stowed: " + mLastStowed);
-            if (isHandwaveEnabled() && (event.timestamp - mLastStowed) < HANDWAVE_DELTA_NS) {
+            if (isHandwaveEnabled() && (SystemClock.elapsedRealtime() - mDisplayOffTimestamp) > DELAY_PULSE_INTERVAL_MS) {
                 // assume this was a handwave and pulse
                 launchDozePulse();
             }
@@ -266,6 +268,8 @@ public class MotoDozeService extends Service {
 
     private void onDisplayOff() {
         if (DEBUG) Log.d(TAG, "Display off");
+
+        mDisplayOffTimestamp = SystemClock.elapsedRealtime();
 
         if (isPickUpEnabled() || isHandwaveEnabled() || isCameraEnabled() || isFlashlightEnabled()) {
             mStowSensor.enable();
