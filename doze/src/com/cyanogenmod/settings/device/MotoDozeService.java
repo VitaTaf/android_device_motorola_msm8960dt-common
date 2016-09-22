@@ -17,6 +17,7 @@
 package com.cyanogenmod.settings.device;
 
 import android.app.IntentService;
+import android.app.KeyguardManager;
 import android.app.Service;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -73,6 +74,7 @@ public class MotoDozeService extends Service {
     private boolean mPickUpGestureEnabled = false;
     private boolean mHandwaveGestureEnabled = false;
     private boolean mLastUnstowed = true;
+    private boolean mLocked = false;
     private long mLastStowed = 0;
 
     private MotoSensor.MotoSensorListener mListener = new MotoSensor.MotoSensorListener() {
@@ -150,6 +152,13 @@ public class MotoDozeService extends Service {
     }
 
     private void launchDozePulse() {
+        long currentTimeout = Settings.Secure.getLong(mContext.getContentResolver(),
+            Settings.Secure.LOCK_SCREEN_LOCK_AFTER_TIMEOUT, 5000);
+        if (DEBUG) Log.d(TAG, "Current Lockscreen Timeout: " + currentTimeout);
+        if (!mLocked && (SystemClock.elapsedRealtime() - mDisplayOffTimestamp) < currentTimeout) {
+            mSensorWakeLock.acquire(SENSOR_WAKELOCK_DURATION);
+            mPowerManager.wakeUp(SystemClock.uptimeMillis());
+        }
         long delta = SystemClock.elapsedRealtime() - mLastPulseTimestamp;
         if (DEBUG) Log.d(TAG, "Time since last pulse: " + delta);
         if (delta > MIN_PULSE_INTERVAL_MS) {
@@ -273,6 +282,13 @@ public class MotoDozeService extends Service {
         if (DEBUG) Log.d(TAG, "Display off");
 
         mDisplayOffTimestamp = SystemClock.elapsedRealtime();
+
+        KeyguardManager km = (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
+        if( km.inKeyguardRestrictedInputMode()) {
+            mLocked = true;
+        } else {
+            mLocked = false;
+        }
 
         if (isPickUpEnabled() || isHandwaveEnabled() || isCameraEnabled() || isFlashlightEnabled()) {
             mStowSensor.enable();
