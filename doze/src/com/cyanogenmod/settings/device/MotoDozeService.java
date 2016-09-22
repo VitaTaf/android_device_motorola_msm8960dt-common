@@ -72,6 +72,7 @@ public class MotoDozeService extends Service {
     private boolean mFlashlightGestureEnabled = false;
     private boolean mPickUpGestureEnabled = false;
     private boolean mHandwaveGestureEnabled = false;
+    private boolean mLastUnstowed = true;
     private long mLastStowed = 0;
 
     private MotoSensor.MotoSensorListener mListener = new MotoSensor.MotoSensorListener() {
@@ -208,6 +209,7 @@ public class MotoDozeService extends Service {
         boolean isStowed = (event.values[0] == 1);
 
         if (isStowed) {
+            mLastUnstowed = false;
             mLastStowed = event.timestamp;
             if (isPickUpEnabled()) {
                 mFlatSensor.disable();
@@ -220,10 +222,11 @@ public class MotoDozeService extends Service {
             }
         } else {
             if (DEBUG) Log.d(TAG, "Unstowed: " + event.timestamp + " last stowed: " + mLastStowed);
-            if (isHandwaveEnabled() && (SystemClock.elapsedRealtime() - mDisplayOffTimestamp) > DELAY_PULSE_INTERVAL_MS) {
+            if (!mLastUnstowed && isHandwaveEnabled()) {
                 // assume this was a handwave and pulse
                 launchDozePulse();
             }
+            mLastUnstowed = true;
             if (isPickUpEnabled()) {
                 mFlatSensor.enable();
             }
