@@ -54,7 +54,7 @@ public class MotoDozeService extends Service {
 
     private static final int SENSOR_WAKELOCK_DURATION = 200;
     private static final int MIN_PULSE_INTERVAL_MS = 250;
-    private static final int DELAY_PULSE_INTERVAL_MS = 4000;
+    private static final int DELAY_PULSE_INTERVAL_MS = 750;
     private static final int HANDWAVE_DELTA_NS = 1000 * 1000 * 1000;
 
     private Context mContext;
@@ -158,12 +158,13 @@ public class MotoDozeService extends Service {
         if (!mLocked && (SystemClock.elapsedRealtime() - mDisplayOffTimestamp) < currentTimeout) {
             mSensorWakeLock.acquire(SENSOR_WAKELOCK_DURATION);
             mPowerManager.wakeUp(SystemClock.uptimeMillis());
-        }
-        long delta = SystemClock.elapsedRealtime() - mLastPulseTimestamp;
-        if (DEBUG) Log.d(TAG, "Time since last pulse: " + delta);
-        if (delta > MIN_PULSE_INTERVAL_MS) {
-            mLastPulseTimestamp = SystemClock.elapsedRealtime();
-            mContext.sendBroadcast(new Intent(DOZE_INTENT));
+        } else {
+            long delta = SystemClock.elapsedRealtime() - mLastPulseTimestamp;
+            if (DEBUG) Log.d(TAG, "Time since last pulse: " + delta);
+            if (delta > MIN_PULSE_INTERVAL_MS) {
+                mLastPulseTimestamp = SystemClock.elapsedRealtime();
+                mContext.sendBroadcast(new Intent(DOZE_INTENT));
+            }
         }
     }
 
@@ -209,7 +210,7 @@ public class MotoDozeService extends Service {
     }
 
     private void handleFlat(boolean isFlat) {
-        if (!isFlat) {
+        if (!isFlat && (SystemClock.elapsedRealtime() - mDisplayOffTimestamp) > DELAY_PULSE_INTERVAL_MS | !mLocked) {
             launchDozePulse();
         }
     }
