@@ -61,7 +61,6 @@ public class MotoDozeService extends Service {
     private FlatSensor mFlatSensor;
     private MotoSensor mStowSensor;
     private MotoSensor mCameraActivationSensor;
-    private MotoSensor mSigMotionSensor;
     private MotoSensor mFlashlightActivationSensor;
     private PowerManager mPowerManager;
     private WakeLock mSensorWakeLock;
@@ -76,7 +75,6 @@ public class MotoDozeService extends Service {
     private boolean mHandwaveGestureEnabled = false;
     private boolean mLastUnstowed = true;
     private boolean mLocked = false;
-    private float mLastState = 0;
     private long mLastStowed = 0;
     private long[] mFlashlightVibrate = {0,200,100,400};
 
@@ -86,9 +84,6 @@ public class MotoDozeService extends Service {
             if (DEBUG) Log.d(TAG, "Got sensor event: " + event.values[0] + " for type " + sensorType);
 
             switch (sensorType) {
-                case MotoSensor.SENSOR_TYPE_MMI_SIM:
-                    handleSigMotion(event);
-                    break;
                 case MotoSensor.SENSOR_TYPE_MMI_STOW:
                     handleStow(event);
                     break;
@@ -116,8 +111,6 @@ public class MotoDozeService extends Service {
         if (DEBUG) Log.d(TAG, "Creating service");
         super.onCreate();
         mContext = this;
-        mSigMotionSensor = new MotoSensor(mContext, MotoSensor.SENSOR_TYPE_MMI_SIM);
-        mSigMotionSensor.registerListener(mListener);
         mStowSensor = new MotoSensor(mContext, MotoSensor.SENSOR_TYPE_MMI_STOW);
         mStowSensor.registerListener(mListener);
         mFlatSensor = new FlatSensor(mContext);
@@ -152,7 +145,6 @@ public class MotoDozeService extends Service {
         mCameraActivationSensor.disable();
         mFlashlightActivationSensor.disable();
         mFlatSensor.disable();
-        mSigMotionSensor.disable();
     }
 
     @Override
@@ -232,7 +224,6 @@ public class MotoDozeService extends Service {
             mLastStowed = event.timestamp;
             if (isPickUpEnabled()) {
                 mFlatSensor.disable();
-                mSigMotionSensor.disable();
             }
             if (isCameraEnabled()) {
                 mCameraActivationSensor.disable();
@@ -249,7 +240,6 @@ public class MotoDozeService extends Service {
             mLastUnstowed = true;
             if (isPickUpEnabled()) {
                 mFlatSensor.enable();
-                mSigMotionSensor.enable();
             }
             if (isCameraEnabled()) {
                 mCameraActivationSensor.enable();
@@ -265,15 +255,6 @@ public class MotoDozeService extends Service {
         Vibrator v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
         v.vibrate(500);
         launchCamera();
-    }
-
-    private void handleSigMotion(SensorEvent event) {
-        if (event.values[0] != 2 && (SystemClock.elapsedRealtime() - mDisplayOffTimestamp) > DELAY_PULSE_INTERVAL_MS
-            && mLastState != event.values[0]) {
-            if (DEBUG) Log.d(TAG, "State: " + event.values[0]);
-            launchDozePulse();
-            mLastState = event.values[0];
-        }
     }
 
     private void handleFlashlightActivation() {
@@ -300,7 +281,6 @@ public class MotoDozeService extends Service {
         }
         if (isPickUpEnabled()) {
             mFlatSensor.disable();
-            mSigMotionSensor.disable();
         }
     }
 

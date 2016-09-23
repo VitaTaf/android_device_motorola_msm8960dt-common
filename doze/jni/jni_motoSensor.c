@@ -34,7 +34,6 @@
 
 #define UNUSED __attribute__((unused))
 
-#define SENSOR_TYPE_MMI_SIM 65536
 #define SENSOR_TYPE_MMI_FLAT_UP 65537
 #define SENSOR_TYPE_MMI_FLAT_DOWN 65538
 #define SENSOR_TYPE_MMI_STOW 65539
@@ -111,9 +110,6 @@ JNIEXPORT void JNICALL Java_com_cyanogenmod_settings_device_MotoSensor_native_1e
     wake_sensors = get_wake_sensors();
 
     switch (wakeSensor) {
-        case SENSOR_TYPE_MMI_SIM:
-            wake_sensors |= M_SIM;
-            break;
         case SENSOR_TYPE_MMI_FLAT_UP:
             wake_sensors |= M_FLATUP;
             break;
@@ -146,9 +142,6 @@ JNIEXPORT void JNICALL Java_com_cyanogenmod_settings_device_MotoSensor_native_1d
     wake_sensors = get_wake_sensors();
 
     switch (wakeSensor) {
-        case SENSOR_TYPE_MMI_SIM:
-            wake_sensors &= (~M_SIM);
-            break;
         case SENSOR_TYPE_MMI_FLAT_UP:
             wake_sensors &= (~M_FLATUP);
             break;
