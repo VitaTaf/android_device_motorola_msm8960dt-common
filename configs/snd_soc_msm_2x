@@ -2056,8 +2056,8 @@ SectionDevice
 		'SLIM_0_TX Channels':0:One
 		'SLIM TX7 MUX':0:DEC6
 		'DEC6 MUX':0:ADC1
-		'DEC6 Volume':1:68
-		'ADC1 Volume':1:66
+		'DEC6 Volume':1:80
+		'ADC1 Volume':1:80
 		'MICBIAS1 CAPLESS Switch':1:0
 	EndSequence
 
@@ -2065,7 +2065,7 @@ SectionDevice
 		'AIF1_CAP Mixer SLIM TX7':1:0
 		'SLIM TX7 MUX':0:ZERO
 		'DEC6 MUX':0:ZERO
-		'DEC6 Volume':1:68
+		'DEC6 Volume':1:80
 		'ADC1 Volume':1:0
 		'MICBIAS1 CAPLESS Switch':1:0
 	EndSequence
@@ -2112,7 +2112,7 @@ SectionDevice
 		'SLIM TX7 MUX':0:DEC4
 		'DEC4 MUX':0:ADC3
 		'TX4 HPF cut off':0:MIN_3DB_75Hz
-		'DEC4 Volume':1:68
+		'DEC4 Volume':1:80
 		'ADC3 Volume':1:100
 		'MICBIAS1 CAPLESS Switch':1:0
 	EndSequence
@@ -2122,7 +2122,7 @@ SectionDevice
 		'SLIM TX7 MUX':0:ZERO
 		'DEC4 MUX':0:ZERO
 		'TX4 HPF cut off':0:MIN_3DB_4Hz
-		'DEC4 Volume':1:68
+		'DEC4 Volume':1:80
 		'ADC3 Volume':1:0
 		'MICBIAS1 CAPLESS Switch':1:0
 	EndSequence
