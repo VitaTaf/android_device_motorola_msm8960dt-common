@@ -78,6 +78,7 @@ public class MotoDozeService extends Service {
     private boolean mLocked = false;
     private float mLastState = 0;
     private long mLastStowed = 0;
+    private long[] mFlashlightVibrate = {0,200,100,400};
 
     private MotoSensor.MotoSensorListener mListener = new MotoSensor.MotoSensorListener() {
         @Override
@@ -277,7 +278,7 @@ public class MotoDozeService extends Service {
 
     private void handleFlashlightActivation() {
         Vibrator v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
-        v.vibrate(500);
+        v.vibrate(mFlashlightVibrate, -1);
         launchFlashlight();
     }
 
