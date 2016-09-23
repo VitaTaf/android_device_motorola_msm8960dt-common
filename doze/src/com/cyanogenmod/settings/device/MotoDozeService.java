@@ -77,7 +77,6 @@ public class MotoDozeService extends Service {
     private boolean mLastUnstowed = true;
     private boolean mLocked = false;
     private float mLastState = 0;
-    private float mCurrentState;
     private long mLastStowed = 0;
     private long[] mFlashlightVibrate = {0,200,100,400};
 
@@ -269,14 +268,12 @@ public class MotoDozeService extends Service {
     }
 
     private void handleSigMotion(SensorEvent event) {
-        float mCurrentState = event.values[0];
-        if (mCurrentState != 2 && mCurrentState != -1 && mCurrentState != mLastState) {
-            if ((SystemClock.elapsedRealtime() - mDisplayOffTimestamp) > DELAY_PULSE_INTERVAL_MS) {
-                launchDozePulse();
-            }
+        if (event.values[0] != 2 && (SystemClock.elapsedRealtime() - mDisplayOffTimestamp) > DELAY_PULSE_INTERVAL_MS
+            && mLastState != event.values[0]) {
+            if (DEBUG) Log.d(TAG, "State: " + event.values[0]);
+            launchDozePulse();
+            mLastState = event.values[0];
         }
-        mLastState = mCurrentState;
-        if (DEBUG) Log.d(TAG, "Current State: " + mCurrentState + ", " + "Previous State: " + mLastState);
     }
 
     private void handleFlashlightActivation() {
