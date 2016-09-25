@@ -76,7 +76,6 @@ public class MotoDozeService extends Service {
     private boolean mLastUnstowed = true;
     private boolean mLocked = false;
     private long mLastStowed = 0;
-    private long[] mFlashlightVibrate = {0,200,100,400};
 
     private MotoSensor.MotoSensorListener mListener = new MotoSensor.MotoSensorListener() {
         @Override
@@ -153,10 +152,7 @@ public class MotoDozeService extends Service {
     }
 
     private void launchDozePulse() {
-        long currentTimeout = Settings.Secure.getLong(mContext.getContentResolver(),
-            Settings.Secure.LOCK_SCREEN_LOCK_AFTER_TIMEOUT, 5000);
-        if (DEBUG) Log.d(TAG, "Current Lockscreen Timeout: " + currentTimeout);
-        if (!mLocked && (SystemClock.elapsedRealtime() - mDisplayOffTimestamp) < currentTimeout) {
+        if (!mLocked) {
             mSensorWakeLock.acquire(SENSOR_WAKELOCK_DURATION);
             mPowerManager.wakeUp(SystemClock.uptimeMillis());
         } else {
@@ -233,6 +229,8 @@ public class MotoDozeService extends Service {
             }
         } else {
             if (DEBUG) Log.d(TAG, "Unstowed: " + event.timestamp + " last stowed: " + mLastStowed);
+            /* if the sensor is called again when still unstowed,
+                don't pulse since sensor state did not change */
             if (!mLastUnstowed && isHandwaveEnabled()) {
                 // assume this was a handwave and pulse
                 launchDozePulse();
@@ -252,15 +250,16 @@ public class MotoDozeService extends Service {
     }
 
     private void handleCameraActivation() {
+        launchCamera();
         Vibrator v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
         v.vibrate(500);
-        launchCamera();
     }
 
     private void handleFlashlightActivation() {
         launchFlashlight();
         Vibrator v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
         if (!mTorchEnabled) {
+            long[] mFlashlightVibrate = {0,200,100,400};
             v.vibrate(mFlashlightVibrate, -1);
         } else {
             v.vibrate(300);
@@ -287,6 +286,10 @@ public class MotoDozeService extends Service {
     private void onDisplayOff() {
         if (DEBUG) Log.d(TAG, "Display off");
 
+        if (isPickUpEnabled() || isHandwaveEnabled() || isCameraEnabled() || isFlashlightEnabled()) {
+            mStowSensor.enable();
+        }
+
         mDisplayOffTimestamp = SystemClock.elapsedRealtime();
 
         KeyguardManager km = (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
@@ -294,10 +297,6 @@ public class MotoDozeService extends Service {
             mLocked = true;
         } else {
             mLocked = false;
-        }
-
-        if (isPickUpEnabled() || isHandwaveEnabled() || isCameraEnabled() || isFlashlightEnabled()) {
-            mStowSensor.enable();
         }
     }
 
